@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlowPay — Pasarela de Pagos Bolivia</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0a0a12;
+    --cream: #f5f2eb;
+    --gold: #c9a84c;
+    --gold-light: #e8c96a;
+    --green: #2ecc8f;
+    --blue: #3b7cf4;
+    --red: #e84040;
+    --glass: rgba(255,255,255,0.06);
+    --border: rgba(255,255,255,0.1);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--ink);
+    color: var(--cream);
+    overflow-x: hidden;
+  }
+
+  /* ---- NOISE TEXTURE ---- */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+    opacity: 0.035;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ---- NAV ---- */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1.2rem 5vw;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,18,0.8);
+    backdrop-filter: blur(20px);
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.4rem;
+    letter-spacing: -0.03em;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .logo-mark {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--gold), var(--green));
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    font-size: 0.9rem;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: rgba(245,242,235,0.6);
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--cream); }
+
+  .nav-cta {
+    background: var(--gold);
+    color: var(--ink);
+    padding: 0.55rem 1.3rem;
+    border-radius: 100px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.2s;
+  }
+
+  .nav-cta:hover { background: var(--gold-light); transform: translateY(-1px); }
+
+  /* ---- HERO ---- */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 8rem 5vw 6rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-glow {
+    position: absolute;
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(201,168,76,0.18) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .hero-glow-2 {
+    position: absolute;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(46,204,143,0.12) 0%, transparent 70%);
+    top: 30%; right: -10%;
+    pointer-events: none;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid rgba(201,168,76,0.4);
+    background: rgba(201,168,76,0.08);
+    padding: 0.4rem 1rem;
+    border-radius: 100px;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 2rem;
+    animation: fadeUp 0.8s ease forwards;
+  }
+
+  .badge-dot {
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.8rem, 7vw, 5.5rem);
+    font-weight: 800;
+    line-height: 1.0;
+    letter-spacing: -0.04em;
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.8s 0.1s ease both;
+  }
+
+  h1 span {
+    background: linear-gradient(90deg, var(--gold), var(--gold-light), var(--green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    color: rgba(245,242,235,0.55);
+    max-width: 560px;
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+    font-weight: 300;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    animation: fadeUp 0.8s 0.3s ease both;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: var(--ink);
+    padding: 0.85rem 2rem;
+    border-radius: 100px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 8px 30px rgba(201,168,76,0.3);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(201,168,76,0.4);
+  }
+
+  .btn-outline {
+    border: 1px solid var(--border);
+    color: var(--cream);
+    padding: 0.85rem 2rem;
+    border-radius: 100px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: border-color 0.2s, background 0.2s;
+    background: var(--glass);
+    backdrop-filter: blur(10px);
+  }
+
+  .btn-outline:hover {
+    border-color: rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.08);
+  }
+
+  /* ---- STATS ---- */
+  .stats-bar {
+    width: 100%;
+    max-width: 900px;
+    margin: 5rem auto 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--border);
+    animation: fadeUp 0.8s 0.4s ease both;
+  }
+
+  .stat-item {
+    background: var(--ink);
+    padding: 1.8rem;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--gold);
+    letter-spacing: -0.03em;
+  }
+
+  .stat-label {
+    font-size: 0.82rem;
+    color: rgba(245,242,235,0.45);
+    margin-top: 0.3rem;
+    letter-spacing: 0.03em;
+  }
+
+  /* ---- SECTION COMMON ---- */
+  section { padding: 6rem 5vw; }
+
+  .section-tag {
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 1rem;
+  }
+
+  .section-sub {
+    color: rgba(245,242,235,0.5);
+    font-size: 1rem;
+    line-height: 1.7;
+    max-width: 480px;
+    font-weight: 300;
+  }
+
+  /* ---- CHANNELS ---- */
+  .channels {
+    background: linear-gradient(180deg, transparent, rgba(201,168,76,0.04), transparent);
+  }
+
+  .channels-header {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+
+  .channels-header .section-sub { margin: 0 auto; }
+
+  .channels-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .channel-card {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.8rem;
+    background: var(--glass);
+    backdrop-filter: blur(10px);
+    transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .channel-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--card-accent, rgba(201,168,76,0.08)), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .channel-card:hover {
+    border-color: rgba(255,255,255,0.25);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+
+  .channel-card:hover::before { opacity: 1; }
+
+  .channel-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-size: 1.4rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .channel-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .channel-desc {
+    font-size: 0.83rem;
+    color: rgba(245,242,235,0.45);
+    line-height: 1.6;
+  }
+
+  .channel-badge {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.25rem 0.6rem;
+    border-radius: 100px;
+  }
+
+  .badge-local { background: rgba(59,124,244,0.2); color: var(--blue); }
+  .badge-intl { background: rgba(46,204,143,0.2); color: var(--green); }
+  .badge-new { background: rgba(232,64,64,0.15); color: var(--red); }
+
+  /* ---- INTERNATIONAL ---- */
+  .international {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+  }
+
+  .intl-visual {
+    position: relative;
+    height: 400px;
+  }
+
+  .globe-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    animation: spin linear infinite;
+  }
+
+  .ring-1 {
+    width: 300px; height: 300px;
+    border-color: rgba(201,168,76,0.2);
+    animation-duration: 20s;
+  }
+
+  .ring-2 {
+    width: 220px; height: 220px;
+    border-color: rgba(46,204,143,0.2);
+    animation-duration: 15s;
+    animation-direction: reverse;
+  }
+
+  .ring-3 {
+    width: 140px; height: 140px;
+    border-color: rgba(59,124,244,0.2);
+    animation-duration: 10s;
+  }
+
+  @keyframes spin {
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+
+  .globe-center {
+    position: absolute;
+    width: 70px; height: 70px;
+    background: linear-gradient(135deg, var(--gold), var(--green));
+    border-radius: 50%;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    display: grid;
+    place-items: center;
+    font-size: 1.8rem;
+    box-shadow: 0 0 40px rgba(201,168,76,0.4);
+  }
+
+  .orbit-dot {
+    position: absolute;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    top: 50%; left: 50%;
+  }
+
+  .od-1 { background: var(--gold); box-shadow: 0 0 10px var(--gold); margin: -5px 0 0 145px; }
+  .od-2 { background: var(--green); box-shadow: 0 0 10px var(--green); margin: -5px 0 0 -155px; }
+  .od-3 { background: var(--blue); box-shadow: 0 0 10px var(--blue); margin: 105px 0 0 -5px; }
+
+  .currency-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 2rem;
+  }
+
+  .currency-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    background: var(--glass);
+  }
+
+  .currency-flag { font-size: 1rem; }
+
+  /* ---- HOW IT WORKS ---- */
+  .how-it-works { background: rgba(255,255,255,0.02); }
+
+  .steps-container {
+    max-width: 900px;
+    margin: 4rem auto 0;
+    position: relative;
+  }
+
+  .steps-line {
+    position: absolute;
+    left: 24px;
+    top: 0; bottom: 0;
+    width: 1px;
+    background: linear-gradient(180deg, var(--gold), var(--green), transparent);
+    opacity: 0.4;
+  }
+
+  .step {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 3rem;
+    position: relative;
+  }
+
+  .step-num {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--ink);
+    display: grid;
+    place-items: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: var(--gold);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .step-body h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    margin-top: 0.6rem;
+  }
+
+  .step-body p {
+    color: rgba(245,242,235,0.5);
+    font-size: 0.9rem;
+    line-height: 1.7;
+  }
+
+  /* ---- PRICING ---- */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    max-width: 950px;
+    margin: 4rem auto 0;
+  }
+
+  .price-card {
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2.5rem;
+    background: var(--glass);
+    position: relative;
+    transition: transform 0.3s;
+  }
+
+  .price-card:hover { transform: translateY(-6px); }
+
+  .price-card.featured {
+    border-color: rgba(201,168,76,0.5);
+    background: rgba(201,168,76,0.05);
+  }
+
+  .price-card.featured::before {
+    content: 'Más Popular';
+    position: absolute;
+    top: -1px; left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    color: var(--ink);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.3rem 1rem;
+    border-radius: 0 0 10px 10px;
+  }
+
+  .plan-name {
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(245,242,235,0.45);
+    margin-bottom: 0.8rem;
+  }
+
+  .plan-price {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+  }
+
+  .plan-price sup { font-size: 1.2rem; vertical-align: top; margin-top: 0.5rem; }
+  .plan-price sub { font-size: 0.9rem; font-family: 'DM Sans'; font-weight: 300; color: rgba(245,242,235,0.4); }
+
+  .plan-desc { 
+    color: rgba(245,242,235,0.45); 
+    font-size: 0.85rem; 
+    margin: 1rem 0 1.5rem;
+    line-height: 1.5;
+  }
+
+  .plan-features {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    margin-bottom: 2rem;
+  }
+
+  .plan-features li {
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: rgba(245,242,235,0.75);
+  }
+
+  .plan-features li::before {
+    content: '✓';
+    color: var(--green);
+    font-weight: 700;
+    width: 18px;
+    flex-shrink: 0;
+  }
+
+  .plan-btn {
+    width: 100%;
+    padding: 0.85rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    display: block;
+    transition: all 0.2s;
+    border: 1px solid var(--border);
+    color: var(--cream);
+    background: transparent;
+  }
+
+  .plan-btn:hover {
+    border-color: rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.05);
+  }
+
+  .plan-btn.featured-btn {
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: var(--ink);
+    border-color: transparent;
+  }
+
+  .plan-btn.featured-btn:hover {
+    box-shadow: 0 8px 30px rgba(201,168,76,0.35);
+    transform: translateY(-1px);
+  }
+
+  /* ---- CTA ---- */
+  .cta-section {
+    text-align: center;
+    padding: 8rem 5vw;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-glow {
+    position: absolute;
+    width: 600px; height: 300px;
+    background: radial-gradient(ellipse, rgba(201,168,76,0.15) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .cta-section h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 5vw, 4rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    margin-bottom: 1.2rem;
+    position: relative;
+  }
+
+  .cta-section p {
+    color: rgba(245,242,235,0.5);
+    font-size: 1rem;
+    margin-bottom: 2.5rem;
+    position: relative;
+  }
+
+  /* ---- FOOTER ---- */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 3rem 5vw;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .footer-copy {
+    font-size: 0.8rem;
+    color: rgba(245,242,235,0.3);
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 1.5rem;
+    list-style: none;
+  }
+
+  .footer-links a {
+    font-size: 0.8rem;
+    color: rgba(245,242,235,0.35);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .footer-links a:hover { color: var(--cream); }
+
+  /* ---- RESPONSIVE ---- */
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .stats-bar { grid-template-columns: 1fr; }
+    .international { grid-template-columns: 1fr; }
+    .intl-visual { height: 280px; }
+    .ring-1 { width: 220px; height: 220px; }
+    .ring-2 { width: 160px; height: 160px; }
+    .ring-3 { width: 100px; height: 100px; }
+    .globe-center { width: 55px; height: 55px; font-size: 1.4rem; }
+    footer { flex-direction: column; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="logo-mark">⚡</div>
+    FlowPay
+  </div>
+  <ul class="nav-links">
+    <li><a href="#canales">Canales</a></li>
+    <li><a href="#internacional">Internacional</a></li>
+    <li><a href="#como-funciona">Cómo Funciona</a></li>
+    <li><a href="#precios">Precios</a></li>
+  </ul>
+  <a href="#contacto" class="nav-cta">Empezar Ahora →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-glow-2"></div>
+
+  <div class="hero-badge">
+    <span class="badge-dot"></span>
+    Pasarela de Pagos · Bolivia + Mundo
+  </div>
+
+  <h1>Cobra en Bolivia<br>y en <span>cualquier país.</span></h1>
+  <p class="hero-sub">
+    La pasarela multicanal más completa de Bolivia. QR, tarjetas, bancos locales y pagos internacionales — todo en una sola integración.
+  </p>
+  <div class="hero-actions">
+    <a href="#contacto" class="btn-primary">Crear cuenta gratis</a>
+    <a href="#como-funciona" class="btn-outline">Ver demostración</a>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-num">12+</div>
+      <div class="stat-label">Canales de pago</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">40+</div>
+      <div class="stat-label">Países internacionales</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">99.9%</div>
+      <div class="stat-label">Uptime garantizado</div>
+    </div>
+  </div>
+</section>
+
+<!-- CHANNELS -->
+<section class="channels" id="canales">
+  <div class="channels-header">
+    <div class="section-tag">Canales de Pago</div>
+    <h2 class="section-title">Bolivia y el mundo,<br>cubiertos.</h2>
+    <p class="section-sub">Todos los medios de pago que tus clientes en Bolivia usan — y los que usan afuera.</p>
+  </div>
+
+  <div class="channels-grid">
+
+    <div class="channel-card" style="--card-accent: rgba(59,124,244,0.1)">
+      <span class="channel-badge badge-local">Local</span>
+      <div class="channel-icon" style="background: rgba(59,124,244,0.15)">💳</div>
+      <div class="channel-name">Red Enlace</div>
+      <div class="channel-desc">Tarjeta de crédito y débito emitidas en Bolivia por cualquier banco local.</div>
+    </div>
+
+    <div class="channel-card" style="--card-accent: rgba(46,204,143,0.1)">
+      <span class="channel-badge badge-local">Local</span>
+      <div class="channel-icon" style="background: rgba(46,204,143,0.15)">📱</div>
+      <div class="channel-name">QR Interoperable</div>
+      <div class="channel-desc">QR compatible con BNB, BCP, BISA, Unión, Mercantil, BancoSol, Ganadero y más.</div>
+    </div>
+
+    <div class="channel-card" style="--card-accent: rgba(232,64,64,0.08)">
+      <span class="channel-badge badge-local">Local</span>
+      <div class="channel-icon" style="background: rgba(232,64,64,0.12)">📲</div>
+      <div class="channel-name">Tigo Money</div>
+      <div class="channel-desc">Recibe pagos desde la billetera móvil más usada de Bolivia sin cuenta bancaria.</div>
+    </div>
+
+    <div class="channel-card" style="--card-accent: rgba(59,124,244,0.1)">
+      <span class="channel-badge badge-local">Local</span>
+      <div class="channel-icon" style="background: rgba(59,124,244,0.15)">🏦</div>
+      <div class="channel-name">Botones Bancarios</div>
+      <div class="channel-desc">BCP, BNB, BISA y Banco Unión — botones de pago directo desde la banca en línea.</div>
+    </div>
+
+    <div class="channel-card" style="--card-accent: rgba(201,168,76,0.1)">
+      <span class="channel-badge badge-intl">Global</span>
+      <div class="channel-icon" style="background: rgba(201,168,76,0.15)">🌎</div>
+      <div class="channel-name">Stripe · Tarjetas Int'l</div>
+      <div class="channel-desc">Visa, Mastercard y American Express de cualquier país del mundo. 135+ divisas.</div>
+    </div>
+
+    <div class="channel-card" style="--card-accent: rgba(46,204,143,0.1)">
+      <span class="channel-badge badge-intl">Global</span>
+      <div class="channel-icon" style="background: rgba(46,204,143,0.15)">🅿️</div>
+      <div class="channel-name">PayPal</div>
+      <div class="channel-desc">El método de pago digital más reconocido en Latinoamérica, EE.UU. y Europa.</div>
+    </div>
+
+    <div class="channel-card" style="--card-accent: rgba(201,168,76,0.08)">
+      <span class="channel-badge badge-intl">Global</span>
+      <div class="channel-icon" style="background: rgba(201,168,76,0.12)">↔️</div>
+      <div class="channel-name">Wise Transfer</div>
+      <div class="channel-desc">Transferencias internacionales de bajo costo. Recibe USD, EUR, BRL y más.</div>
+    </div>
+
+    <div class="channel-card" style="--card-accent: rgba(59,124,244,0.08)">
+      <span class="channel-badge badge-new">Próximo</span>
+      <div class="channel-icon" style="background: rgba(59,124,244,0.1)">⛓️</div>
+      <div class="channel-name">Cripto (USDT/BTC)</div>
+      <div class="channel-desc">Pagos en stablecoins y criptomonedas para clientes globales sin fricciones bancarias.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- INTERNATIONAL -->
+<section id="internacional">
+  <div class="international">
+    <div>
+      <div class="section-tag">Pagos Internacionales</div>
+      <h2 class="section-title">Tu negocio sin<br>fronteras.</h2>
+      <p class="section-sub">
+        A diferencia de otras pasarelas bolivianas, FlowPay te permite cobrar en múltiples divisas a clientes en más de 40 países — el dinero llega convertido a bolivianos o a tu cuenta en USD.
+      </p>
+
+      <div class="currency-pills">
+        <div class="currency-pill"><span class="currency-flag">🇺🇸</span> USD</div>
+        <div class="currency-pill"><span class="currency-flag">🇪🇺</span> EUR</div>
+        <div class="currency-pill"><span class="currency-flag">🇧🇷</span> BRL</div>
+        <div class="currency-pill"><span class="currency-flag">🇦🇷</span> ARS</div>
+        <div class="currency-pill"><span class="currency-flag">🇨🇱</span> CLP</div>
+        <div class="currency-pill"><span class="currency-flag">🇵🇪</span> PEN</div>
+        <div class="currency-pill"><span class="currency-flag">🇬🇧</span> GBP</div>
+        <div class="currency-pill"><span class="currency-flag">🇨🇴</span> COP</div>
+      </div>
+    </div>
+
+    <div class="intl-visual">
+      <div class="globe-ring ring-1"></div>
+      <div class="globe-ring ring-2"></div>
+      <div class="globe-ring ring-3"></div>
+      <div class="globe-center">🌐</div>
+      <div class="orbit-dot od-1"></div>
+      <div class="orbit-dot od-2"></div>
+      <div class="orbit-dot od-3"></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-it-works" id="como-funciona">
+  <div style="max-width: 600px;">
+    <div class="section-tag">Integración</div>
+    <h2 class="section-title">En 4 pasos,<br>a cobrar.</h2>
+  </div>
+
+  <div class="steps-container">
+    <div class="steps-line"></div>
+
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-body">
+        <h3>Crea tu cuenta</h3>
+        <p>Registro en línea con RUT de tu empresa o negocio. Aprobación en 24–48 horas hábiles. Sin burocracia innecesaria.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-body">
+        <h3>Integra con una sola API</h3>
+        <p>SDK disponible para Node.js, Python, PHP y WordPress. Una integración activa todos los canales de pago simultáneamente. Sandbox incluido para pruebas.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-body">
+        <h3>Elige tus canales</h3>
+        <p>Desde el dashboard activa solo los métodos que necesitas: QR, tarjetas, bancos, billeteras o pagos internacionales.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-body">
+        <h3>Cobra y gestiona</h3>
+        <p>Dashboard en tiempo real con reportes de transacciones, conciliaciones automáticas y liquidación semanal a tu cuenta bancaria.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="precios">
+  <div style="text-align: center; margin-bottom: 1rem;">
+    <div class="section-tag">Tarifas</div>
+    <h2 class="section-title">Comisiones transparentes.<br>Sin letra chica.</h2>
+  </div>
+
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="plan-name">Starter</div>
+      <div class="plan-price"><sup>Bs.</sup>0<sub>/mes</sub></div>
+      <p class="plan-desc">Para emprendedores y pequeños comercios que recién empiezan.</p>
+      <ul class="plan-features">
+        <li>2.9% por transacción</li>
+        <li>QR + Red Enlace</li>
+        <li>Tigo Money</li>
+        <li>Dashboard básico</li>
+        <li>Soporte por email</li>
+      </ul>
+      <a href="#" class="plan-btn">Empezar gratis</a>
+    </div>
+
+    <div class="price-card featured">
+      <div class="plan-name">Business</div>
+      <div class="plan-price"><sup>Bs.</sup>299<sub>/mes</sub></div>
+      <p class="plan-desc">Para negocios en crecimiento que necesitan todos los canales.</p>
+      <ul class="plan-features">
+        <li>1.9% por transacción</li>
+        <li>Todos los bancos bolivianos</li>
+        <li>Pagos internacionales (Stripe)</li>
+        <li>PayPal + Wise</li>
+        <li>API + webhooks</li>
+        <li>Soporte prioritario 24/7</li>
+      </ul>
+      <a href="#" class="plan-btn featured-btn">Comenzar ahora →</a>
+    </div>
+
+    <div class="price-card">
+      <div class="plan-name">Enterprise</div>
+      <div class="plan-price" style="font-size: 1.8rem; margin-top: 0.4rem;">A medida</div>
+      <p class="plan-desc">Volumen alto, integraciones personalizadas y SLA garantizado.</p>
+      <ul class="plan-features">
+        <li>Comisión negociada</li>
+        <li>Todos los canales + cripto</li>
+        <li>Integración dedicada</li>
+        <li>Account manager asignado</li>
+        <li>SLA 99.99% uptime</li>
+        <li>Liquidación diaria</li>
+      </ul>
+      <a href="#" class="plan-btn">Contactar ventas</a>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="contacto">
+  <div class="cta-glow"></div>
+  <h2>Empieza a cobrar<br><span style="background: linear-gradient(90deg, var(--gold), var(--green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">hoy mismo.</span></h2>
+  <p>Crea tu cuenta en menos de 5 minutos. Sin contrato de permanencia.</p>
+  <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; position: relative;">
+    <a href="#" class="btn-primary">Crear cuenta gratis</a>
+    <a href="#" class="btn-outline">Hablar con ventas</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="nav-logo">
+    <div class="logo-mark">⚡</div>
+    FlowPay
+  </div>
+  <div class="footer-copy">© 2025 FlowPay SRL · La Paz, Bolivia · Regulado por el BCB</div>
+  <ul class="footer-links">
+    <li><a href="#">Privacidad</a></li>
+    <li><a href="#">Términos</a></li>
+    <li><a href="#">Contacto</a></li>
+    <li><a href="#">Documentación API</a></li>
+  </ul>
+</footer>
+
+</body>
+</html>
